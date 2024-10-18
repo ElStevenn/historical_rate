@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
     # Calculate the next 2 AM in Europe/Amsterdam timezone and set the params (exec_time)
     next_run_time = main_services.get_next_funding_rate(8)
     logger.info(f"Next run time for schedule_set_analysis: {next_run_time}")
-    params1 = {"period": '8h', "exec_time": int(next_run_time.timestamp() * 1000)} # Keep in mind that the ecec time will change over the time
+    params1 = {"period": '8h'} 
 
 
     # Schedule the set_analysis job every 8 hours starting at next_run_time
@@ -132,7 +132,8 @@ async def get_detail_event(symbol: str):
             "image": crypto_metadata["picture_url"], 
             "description": crypto_metadata["description"], 
             "funding_rate_delay": '4h' if crypto_metadata["funding_rate_del"] == 4 else '8h', 
-            "next_execution_time": next_execution_time.isoformat()}
+            "next_execution_time": next_execution_time.isoformat()
+            }
     
     except TypeError:
         raise HTTPException(status_code=404, detail=f"Symbol {symbol} not found")

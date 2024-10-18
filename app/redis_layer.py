@@ -37,7 +37,7 @@ class RedisService:
             # Local machine
             redis_host = 'localhost'
             port = 6378 
-        elif hostname == 'scw-bold-noyce': 
+        elif hostname == 'scw-hungry-leavitt': 
             redis_host = 'localhost'
             port = 6379    
         else: 

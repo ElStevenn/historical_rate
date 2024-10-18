@@ -5,6 +5,7 @@ import uuid
 import pytz
 import numpy as np
 import logging
+import time as lowtime
 
 from app.redis_layer import RedisService
 from app.bitget_layer import BitgetService
@@ -78,7 +79,8 @@ class MainServiceLayer:
         - Set an analysis if funding rate was less than -0.5, otherwise it'll save the new funding rate.
         - Function executed every 8 or 4 hours, depending on the period.
         """
-        exec_time = int(self.get_last_period_funding_rate(period).timestamp() * 1000)
+        period_value = int(period[:-1])
+        exec_time = int(self.get_last_period_funding_rate(period_value).timestamp() * 1000)
 
         # Fetch cryptos based on the period
         cryptos = (self.redis_service.get_cryptos_by_fr_expiration_optimized('4h') 
@@ -92,15 +94,18 @@ class MainServiceLayer:
             return
 
         # Create a semaphore to limit concurrency
-        semaphore = asyncio.Semaphore(5)  
+        semaphore = asyncio.Semaphore(5)
 
         # Process cryptos in batches
         for i in range(0, len(cryptos), 40):
             batch = cryptos[i:i+40]
             logger.info(f"Processing batch {i // 40 + 1} with {len(batch)} cryptos.")
-            
-            tasks = [self.decide_analysis_crypto(crypto, exec_time, semaphore) for crypto in batch]
-            await asyncio.gather(*tasks)
+
+        for crypto in batch:
+            await self.decide_analysis_crypto(crypto, exec_time, semaphore)
+            await asyncio.sleep(0.3)  # Delay of 0.3 seconds between each request
+
+
 
             # Wait 1 minute before processing the next batch
             await asyncio.sleep(60)
@@ -268,15 +273,14 @@ async def main_testing():
     myown_service = MainServiceLayer()
 
     # Uncomment the following line to run crypto_rebase
-    # await myown_service.crypto_rebase()
+    await myown_service.crypto_rebase()
     # print(myown_service.get_next_funding_rate(4, True))
 
 
-    # minutes_ago = int(datetime.now().timestamp() * 1000) - (10 * 60 * 60 * 1000)
-    # await myown_service.schedule_set_analysis('8h', minutes_ago)
+    # await myown_service.schedule_set_analysis('8h')
     # await myown_service.decide_analysis_crypto('BIGTIMEUSDT')
     # await myown_service.get_crypto_logo("BTCUSDT")
-    print(myown_service.get_last_period_funding_rate(8))
+    # print(myown_service.get_last_period_funding_rate(8))
     logger.info("***** Analysis Completed *****")
 
 

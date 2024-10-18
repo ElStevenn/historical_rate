@@ -12,3 +12,4 @@ aiohttp
 redis
 matplotlib
 websockets
+python-dotenv

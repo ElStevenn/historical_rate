@@ -10,6 +10,7 @@ class Crypto(BaseModel):
     symbol: str
     name: Optional[str]
     image: Optional[str]
+    description: Optional[str]
     funding_rate_delay: Literal['8h', '4h']
     next_execution_time: datetime
 
